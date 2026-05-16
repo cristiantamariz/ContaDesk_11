@@ -108,7 +108,7 @@
 
     <div class="brand">
         <div class="brand-name">ContaDesk</div>
-        <div class="brand-sub">Sistema de gestión contable</div>
+        <div class="brand-sub">Sistema contable</div>
     </div>
 
     <form action="LoginServlet" method="POST">
