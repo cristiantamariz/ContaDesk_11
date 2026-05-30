@@ -1,10 +1,10 @@
 package Servlets;
 
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 @WebServlet("/LogoutServlet")
@@ -13,11 +13,11 @@ public class LogoutServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException {
 
-        // para cerrar la sesion
-        HttpSession s = req.getSession();
-        s.invalidate();
+        HttpSession s = req.getSession(false); // false: no crear sesión si no existe
+        if (s != null) {
+            s.invalidate();
+        }
 
-        // manda al inicio
-        res.sendRedirect("index.jsp");
+        res.sendRedirect(req.getContextPath() + "/index.jsp");
     }
 }

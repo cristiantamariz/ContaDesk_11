@@ -15,8 +15,7 @@ public class ConexionMongo {
         if (cliente == null) {
             try {
                 // la ruta de mongo
-                String c = "mongodb+srv://cristiantamariz09_db_user:ContaDesk2026@cluster0.v8ku75s.mongodb.net/contadesk_v2?retryWrites=true&w=majority&appName=Cluster0";
-
+                String c = "mongodb+srv://cristiantamariz09_db_user:ContaDesk2026@cluster0.v8ku75s.mongodb.net/contadesk_v2?retryWrites=true&w=majority&appName=Cluster0&tlsAllowInvalidCertificates=true";
                 cliente = MongoClients.create(c);
                 bd = cliente.getDatabase("contadesk_v2");
 
