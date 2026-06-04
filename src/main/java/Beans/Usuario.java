@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 public class Usuario {
 
+    private String id;
     private int idUsuario;
     private String username;
     private String passwords;
@@ -21,10 +22,10 @@ public class Usuario {
     }
 
     // Constructor completo (para obtener datos de la BD en el DAO)
-    public Usuario(int idUsuario, String username, String passwords, String nombreCompleto, String email,
+    public Usuario( String id, String username, String passwords, String nombreCompleto, String email,
                    int idRol, boolean activo, int intentosFallidos, Timestamp bloqueadoHasta,
                    Timestamp ultimoAcceso, Timestamp createdAt) {
-        this.idUsuario = idUsuario;
+        this.id = id;
         this.username = username;
         this.passwords = passwords;
         this.nombreCompleto = nombreCompleto;
@@ -124,6 +125,14 @@ public class Usuario {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     @Override

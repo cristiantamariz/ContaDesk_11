@@ -11,23 +11,34 @@ public class ProbarConexion {
     public boolean validarAcceso(String user, String pass) {
 
         try {
+
             MongoDatabase db = ConexionMongo.getDatabase();
 
-            MongoCollection<Document> col = db.getCollection("usuarios");
+            System.out.println("BD: " + db.getName());
 
-            // busca al usuario
-            Document u = col.find(Filters.eq("username", user)).first();
+            MongoCollection<Document> col =
+                    db.getCollection("usuarios");
+
+            System.out.println("Colección obtenida");
+
+            Document u =
+                    col.find(Filters.eq("username", user)).first();
+
+            System.out.println("Resultado: " + u);
 
             if (u != null) {
+
                 String p = u.getString("passwords");
 
-                if (pass.equals(p)) {
-                    return true;
-                }
+                System.out.println("Password BD: " + p);
+
+                return pass.equals(p);
             }
 
         } catch (Exception e) {
-            System.out.println("error");
+
+            e.printStackTrace();
+
         }
 
         return false;

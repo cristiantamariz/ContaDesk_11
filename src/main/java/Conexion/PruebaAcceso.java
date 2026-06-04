@@ -6,23 +6,44 @@ public class PruebaAcceso {
 
     public static void main(String[] args) {
 
-        ProbarConexion v = new ProbarConexion();
+        try {
 
-        // datos para probar
-        String u = "admin";
-        String p = "123456";
+            System.out.println("===== INICIANDO PRUEBA =====");
 
-        System.out.println("probando...");
+            String usuario = "admin";
+            String password = "123456";
 
-        if (v.validarAcceso(u, p)) {
-            System.out.println("funciono");
+            ProbarConexion prueba = new ProbarConexion();
 
-            MongoDatabase db = ConexionMongo.getDatabase();
-            System.out.println(db.getName());
-        } else {
-            System.out.println("no funciono");
+            System.out.println("Intentando validar usuario: " + usuario);
+
+            boolean acceso = prueba.validarAcceso(usuario, password);
+
+            if (acceso) {
+
+                System.out.println("✓ Login correcto");
+
+                MongoDatabase db = ConexionMongo.getDatabase();
+
+                if (db != null) {
+                    System.out.println("Base de datos: " + db.getName());
+                } else {
+                    System.out.println("La base de datos es null");
+                }
+
+            } else {
+
+                System.out.println("✗ Login incorrecto");
+            }
+
+        } catch (Exception e) {
+
+            System.out.println("Error durante la prueba:");
+            e.printStackTrace();
+
+        } finally {
+
+            ConexionMongo.cerrarConexion();
         }
-
-        ConexionMongo.cerrarConexion();
     }
 }

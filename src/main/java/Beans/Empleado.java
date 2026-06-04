@@ -1,126 +1,251 @@
 package Beans;
 
-import java.sql.Date;
-import java.sql.Timestamp;
+import java.util.Date;
 
 public class Empleado {
 
-    private int idEmpleado;
-    private int idUsuario;
+    // ID de MongoDB (_id) representado como String Hexadecimal
+    private String id;
+
+    // Campos requeridos por el esquema
     private String numeroEmpleado;
     private String nombre;
+    private String fechaContratacion; // Definido como 'string' en tu esquema BSON
+
+    // Campos opcionales / Atributos del empleado
     private String apellidoPaterno;
     private String apellidoMaterno;
-    private Date fechaContratacion;
-    private Date fechaBaja;
+    private String fechaNacimiento;   // Definido como 'string' en tu esquema BSON
+    private String fechaBaja;         // Definido como 'string' en tu esquema BSON
     private String telefono;
-    private String direccion;
     private String curp;
     private String rfc;
     private String nss;
-    private Date fechaNacimiento;
     private String estadoCivil;
     private String tipoContrato;
-    private int idDepartamento;
-    private int idPuesto;
     private boolean activo;
-    private Timestamp createdAt;
+    private Date createdAt;           // Permite 'date' y 'null'
+    private Integer usuarioId;        // Permite 'int' y 'null'
 
-    // Constructor vacío
+    // Objetos embebidos (Documentos incrustados de MongoDB)
+    private Departamento departamento;
+    private Puesto puesto;
+
+    // Constructor vacío requerido para la especificación de JavaBeans y Gson
     public Empleado() {
+        this.departamento = new Departamento();
+        this.puesto = new Puesto();
     }
 
-    // Constructor completo (para consultas SELECT en el DAO)
-    public Empleado(int idEmpleado, int idUsuario, String numeroEmpleado, String nombre, String apellidoPaterno,
-                    String apellidoMaterno, Date fechaContratacion, Date fechaBaja, String telefono,
-                    String direccion, String curp, String rfc, String nss, Date fechaNacimiento,
-                    String estadoCivil, String tipoContrato, int idDepartamento, int idPuesto,
-                    boolean activo, Timestamp createdAt) {
-        this.idEmpleado = idEmpleado;
-        this.idUsuario = idUsuario;
+    // ── GETTERS Y SETTERS ─────────────────────────────────────────────────
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getNumeroEmpleado() {
+        return numeroEmpleado;
+    }
+
+    public void setNumeroEmpleado(String numeroEmpleado) {
         this.numeroEmpleado = numeroEmpleado;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public String getApellidoPaterno() {
+        return apellidoPaterno;
+    }
+
+    public void setApellidoPaterno(String apellidoPaterno) {
         this.apellidoPaterno = apellidoPaterno;
+    }
+
+    public String getApellidoMaterno() {
+        return apellidoMaterno;
+    }
+
+    public void setApellidoMaterno(String apellidoMaterno) {
         this.apellidoMaterno = apellidoMaterno;
+    }
+
+    public String getFechaContratacion() {
+        return fechaContratacion;
+    }
+
+    public void setFechaContratacion(String fechaContratacion) {
         this.fechaContratacion = fechaContratacion;
-        this.fechaBaja = fechaBaja;
-        this.telefono = telefono;
-        this.direccion = direccion;
-        this.curp = curp;
-        this.rfc = rfc;
-        this.nss = nss;
+    }
+
+    public String getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+
+    public void setFechaNacimiento(String fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public String getFechaBaja() {
+        return fechaBaja;
+    }
+
+    public void setFechaBaja(String fechaBaja) {
+        this.fechaBaja = fechaBaja;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getCurp() {
+        return curp;
+    }
+
+    public void setCurp(String curp) {
+        this.curp = curp;
+    }
+
+    public String getRfc() {
+        return rfc;
+    }
+
+    public void setRfc(String rfc) {
+        this.rfc = rfc;
+    }
+
+    public String getNss() {
+        return nss;
+    }
+
+    public void setNss(String nss) {
+        this.nss = nss;
+    }
+
+    public String getEstadoCivil() {
+        return estadoCivil;
+    }
+
+    public void setEstadoCivil(String estadoCivil) {
         this.estadoCivil = estadoCivil;
+    }
+
+    public String getTipoContrato() {
+        return tipoContrato;
+    }
+
+    public void setTipoContrato(String tipoContrato) {
         this.tipoContrato = tipoContrato;
-        this.idDepartamento = idDepartamento;
-        this.idPuesto = idPuesto;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
         this.activo = activo;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
-    // Getters y Setters
-    public int getIdEmpleado() { return idEmpleado; }
-    public void setIdEmpleado(int idEmpleado) { this.idEmpleado = idEmpleado; }
+    public Integer getUsuarioId() {
+        return usuarioId;
+    }
 
-    public int getIdUsuario() { return idUsuario; }
-    public void setIdUsuario(int idUsuario) { this.idUsuario = idUsuario; }
+    public void setUsuarioId(Integer usuarioId) {
+        this.usuarioId = usuarioId;
+    }
 
-    public String getNumeroEmpleado() { return numeroEmpleado; }
-    public void setNumeroEmpleado(String numeroEmpleado) { this.numeroEmpleado = numeroEmpleado; }
+    public Departamento getDepartamento() {
+        return departamento;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setDepartamento(Departamento departamento) {
+        this.departamento = departamento;
+    }
 
-    public String getApellidoPaterno() { return apellidoPaterno; }
-    public void setApellidoPaterno(String apellidoPaterno) { this.apellidoPaterno = apellidoPaterno; }
+    public Puesto getPuesto() {
+        return puesto;
+    }
 
-    public String getApellidoMaterno() { return apellidoMaterno; }
-    public void setApellidoMaterno(String apellidoMaterno) { this.apellidoMaterno = apellidoMaterno; }
+    public void setPuesto(Puesto puesto) {
+        this.puesto = puesto;
+    }
 
-    public Date getFechaContratacion() { return fechaContratacion; }
-    public void setFechaContratacion(Date fechaContratacion) { this.fechaContratacion = fechaContratacion; }
+    // ── CLASES INTERNAS ESTÁTICAS PARA OBJETOS EMBEBIDOS ──────────────────
 
-    public Date getFechaBaja() { return fechaBaja; }
-    public void setFechaBaja(Date fechaBaja) { this.fechaBaja = fechaBaja; }
+    public static class Departamento {
+        private String nombre;
+        private String descripcion;
 
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
+        public Departamento() {}
 
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+        public String getNombre() {
+            return nombre;
+        }
 
-    public String getCurp() { return curp; }
-    public void setCurp(String curp) { this.curp = curp; }
+        public void setNombre(String nombre) {
+            this.nombre = nombre;
+        }
 
-    public String getRfc() { return rfc; }
-    public void setRfc(String rfc) { this.rfc = rfc; }
+        public String getDescripcion() {
+            return descripcion;
+        }
 
-    public String getNss() { return nss; }
-    public void setNss(String nss) { this.nss = nss; }
+        public void setDescripcion(String descripcion) {
+            this.descripcion = descripcion;
+        }
+    }
 
-    public Date getFechaNacimiento() { return fechaNacimiento; }
-    public void setFechaNacimiento(Date fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
+    public static class Puesto {
+        private String nombre;
+        // Se usa Double (objeto) por si en BSON viene un entero o flotante y acepta nulos
+        private Double salarioMinimo;
+        private Double salarioMaximo;
 
-    public String getEstadoCivil() { return estadoCivil; }
-    public void setEstadoCivil(String estadoCivil) { this.estadoCivil = estadoCivil; }
+        public Puesto() {}
 
-    public String getTipoContrato() { return tipoContrato; }
-    public void setTipoContrato(String tipoContrato) { this.tipoContrato = tipoContrato; }
+        public String getNombre() {
+            return nombre;
+        }
 
-    public int getIdDepartamento() { return idDepartamento; }
-    public void setIdDepartamento(int idDepartamento) { this.idDepartamento = idDepartamento; }
+        public void setNombre(String nombre) {
+            this.nombre = nombre;
+        }
 
-    public int getIdPuesto() { return idPuesto; }
-    public void setIdPuesto(int idPuesto) { this.idPuesto = idPuesto; }
+        public Double getSalarioMinimo() {
+            return salarioMinimo;
+        }
 
-    public boolean isActivo() { return activo; }
-    public void setActivo(boolean activo) { this.activo = activo; }
+        public void setSalarioMinimo(Double salarioMinimo) {
+            this.salarioMinimo = salarioMinimo;
+        }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+        public Double getSalarioMaximo() {
+            return salarioMaximo;
+        }
 
-    @Override
-    public String toString() {
-        return "Empleado{" + "num=" + numeroEmpleado + ", nombre=" + nombre + " " + apellidoPaterno + "}";
+        public void setSalarioMaximo(Double salarioMaximo) {
+            this.salarioMaximo = salarioMaximo;
+        }
     }
 }
