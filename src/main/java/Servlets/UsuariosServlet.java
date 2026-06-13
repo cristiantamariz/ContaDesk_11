@@ -99,17 +99,19 @@ public class UsuariosServlet extends HttpServlet {
         Usuario u = new Usuario();
 
         u.setUsername(req.getParameter("username"));
-        u.setNombreCompleto(req.getParameter("nombreCompleto"));
+        // CAMBIO AQUÍ: Debe coincidir con 'nombre_completo'
+        u.setNombreCompleto(req.getParameter("nombre_completo"));
+
         u.setEmail(req.getParameter("email"));
         u.setPasswords(req.getParameter("passwords"));
         u.setActivo("true".equals(req.getParameter("activo")));
 
-        // Manejo seguro del Integer para evitar NumberFormatException
-        String idRolParam = req.getParameter("idRol");
+        // CAMBIO AQUÍ: Asegúrate que esto coincida con el nombre que envías desde JS (usu-rol)
+        String idRolParam = req.getParameter("rol_id");
         if (idRolParam != null && !idRolParam.trim().isEmpty()) {
             u.setIdRol(Integer.parseInt(idRolParam));
         } else {
-            u.setIdRol(3); // Rol por defecto
+            u.setIdRol(3);
         }
 
         return u;

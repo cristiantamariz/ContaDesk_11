@@ -47,16 +47,18 @@ public class UsuarioDAO {
     }
 
     public boolean crear(Usuario u) {
-
         try {
-            // Se reutiliza crearRol() para no duplicar código y respetar el Enum
             Document rol = crearRol(u.getIdRol());
 
+            // Asegúrate de enviar un string vacío en lugar de null
+            String nombre = (u.getNombreCompleto() != null) ? u.getNombreCompleto() : "";
+            String username = (u.getUsername() != null) ? u.getUsername() : "";
+            String email = (u.getEmail() != null) ? u.getEmail() : "";
+
             Document doc = new Document()
-                    .append("username", u.getUsername())
-                    .append("nombre_completo", u.getNombreCompleto())
-                    .append("email", u.getEmail())
-                    // Si la contraseña es null, enviamos cadena vacía para cumplir el bsonType: 'string'
+                    .append("username", username)
+                    .append("nombre_completo", nombre) // Aquí ya no será null
+                    .append("email", email)
                     .append("passwords", u.getPasswords() != null ? u.getPasswords() : "")
                     .append("activo", u.isActivo())
                     .append("intentos_fallidos", 0)
@@ -67,9 +69,8 @@ public class UsuarioDAO {
 
             collection.insertOne(doc);
             return true;
-
         } catch (Exception e) {
-            e.printStackTrace();
+            e.printStackTrace(); // Aquí verás si hay otro campo fallando
             return false;
         }
     }
