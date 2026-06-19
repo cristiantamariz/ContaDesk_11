@@ -21,7 +21,6 @@ public class UsuariosServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
 
-        // Protección: solo usuarios con sesión activa
         if (req.getSession().getAttribute("usuarioLogueado") == null) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
@@ -51,8 +50,6 @@ public class UsuariosServlet extends HttpServlet {
         PrintWriter out = resp.getWriter();
 
         String action = req.getParameter("action");
-
-        // Utilizamos un Map para que Gson genere el JSON limpiamente
         Map<String, Object> respuesta = new HashMap<>();
 
         try {
@@ -66,8 +63,8 @@ public class UsuariosServlet extends HttpServlet {
                 }
                 case "update" -> {
                     Usuario u = extraerUsuario(req);
-                    // Corrección: Mantenemos el ID como String para el ObjectId de Mongo
-                    String id = req.getParameter("idUsuario");
+                    // CORRECCIÓN 1: El JS envía 'id', no 'idUsuario'
+                    String id = req.getParameter("id");
                     u.setId(id);
 
                     boolean ok = dao.actualizar(u);
@@ -75,7 +72,8 @@ public class UsuariosServlet extends HttpServlet {
                     respuesta.put("mensaje", ok ? "Usuario actualizado." : "No se pudo actualizar.");
                 }
                 case "delete" -> {
-                    String id = req.getParameter("idUsuario");
+                    // CORRECCIÓN 1: El JS envía 'id', no 'idUsuario'
+                    String id = req.getParameter("id");
                     boolean ok = dao.eliminar(id);
                     respuesta.put("ok", ok);
                     respuesta.put("mensaje", ok ? "Usuario eliminado." : "No se pudo eliminar.");
@@ -86,7 +84,6 @@ public class UsuariosServlet extends HttpServlet {
                 }
             }
         } catch (Exception e) {
-            // Captura de errores para evitar que el cliente reciba un HTML de Tomcat
             respuesta.put("ok", false);
             respuesta.put("mensaje", "Error interno del servidor: " + e.getMessage());
             e.printStackTrace();
@@ -99,19 +96,28 @@ public class UsuariosServlet extends HttpServlet {
         Usuario u = new Usuario();
 
         u.setUsername(req.getParameter("username"));
-        // CAMBIO AQUÍ: Debe coincidir con 'nombre_completo'
         u.setNombreCompleto(req.getParameter("nombre_completo"));
-
         u.setEmail(req.getParameter("email"));
         u.setPasswords(req.getParameter("passwords"));
         u.setActivo("true".equals(req.getParameter("activo")));
 
-        // CAMBIO AQUÍ: Asegúrate que esto coincida con el nombre que envías desde JS (usu-rol)
+        // CORRECCIÓN 2: Uso correcto del sub-documento Rol y manejo de formato numérico vs texto
         String idRolParam = req.getParameter("rol_id");
         if (idRolParam != null && !idRolParam.trim().isEmpty()) {
-            u.setIdRol(Integer.parseInt(idRolParam));
+            try {
+                // Intenta parsearlo como número (1, 2, 3)
+                u.getRol().setIdRol(Integer.parseInt(idRolParam));
+            } catch (NumberFormatException e) {
+                // Si el JS envió el nombre del rol en vez del número (ej. "administrador")
+                u.getRol().setNombre(idRolParam);
+                switch(idRolParam.toLowerCase()) {
+                    case "administrador" -> u.getRol().setIdRol(1);
+                    case "superusuario" -> u.getRol().setIdRol(2);
+                    default -> u.getRol().setIdRol(3);
+                }
+            }
         } else {
-            u.setIdRol(3);
+            u.getRol().setIdRol(3); // Rol por defecto
         }
 
         return u;

@@ -1,92 +1,89 @@
 package Beans;
 
+import java.util.Date;
+
+/**
+ * Bean que representa un documento de la colección "nomina" en MongoDB.
+ * Schema: id_empleado, periodo {fecha_inicio, fecha_fin, ejercicio},
+ *         sueldo_base, bonos, deducciones, total_neto, estado, created_at
+ *
+ * El bono se calcula como el 3% del montoTotal de todas las cotizaciones
+ * con estatus "Aprobada" asignadas al empleado dentro del periodo.
+ */
 public class Nomina {
 
-    private int idNomina;
-    private int idEmpleado;
-    private int idPeriodo;
-    private double salarioBase;
-    private double diasTrabajados;
-    private double diasIncapacidad;
-    private double diasVacaciones;
-    private double totalPercepciones;
-    private double totalDeducciones;
-    private double isrRetenido;
-    private double imssEmpleado;
-    private double infonavit;
-    private double netoPagar;
-    private String estado;
+    // ID del documento MongoDB (hex string del ObjectId)
+    private String id;
 
-    // Constructor vacío
-    public Nomina() {
-    }
+    // Referencia al empleado (ObjectId del documento en la colección empleados)
+    private String idEmpleado;
 
-    // Constructor completo (para consultas SELECT / Reportes)
-    public Nomina(int idNomina, int idEmpleado, int idPeriodo, double salarioBase, double diasTrabajados,
-                  double diasIncapacidad, double diasVacaciones, double totalPercepciones,
-                  double totalDeducciones, double isrRetenido, double imssEmpleado,
-                  double infonavit, double netoPagar, String estado) {
-        this.idNomina = idNomina;
-        this.idEmpleado = idEmpleado;
-        this.idPeriodo = idPeriodo;
-        this.salarioBase = salarioBase;
-        this.diasTrabajados = diasTrabajados;
-        this.diasIncapacidad = diasIncapacidad;
-        this.diasVacaciones = diasVacaciones;
-        this.totalPercepciones = totalPercepciones;
-        this.totalDeducciones = totalDeducciones;
-        this.isrRetenido = isrRetenido;
-        this.imssEmpleado = imssEmpleado;
-        this.infonavit = infonavit;
-        this.netoPagar = netoPagar;
-        this.estado = estado;
-    }
+    // Datos desnormalizados del empleado (para mostrar sin JOIN)
+    private String nombreEmpleado;
+    private String numeroEmpleado;
 
-    // Getters y Setters
-    public int getIdNomina() { return idNomina; }
-    public void setIdNomina(int idNomina) { this.idNomina = idNomina; }
+    // Periodo de la nómina
+    private String fechaInicio;   // "2026-06-01"
+    private String fechaFin;      // "2026-06-30"
+    private int    ejercicio;     // 2026
 
-    public int getIdEmpleado() { return idEmpleado; }
-    public void setIdEmpleado(int idEmpleado) { this.idEmpleado = idEmpleado; }
+    // Montos
+    private double sueldoBase;    // Salario fijo mensual del empleado
+    private double bonos;         // 3% del total de cotizaciones Aprobadas del periodo
+    private double deducciones;   // ISR + IMSS + otros descuentos (captura manual)
+    private double totalNeto;     // sueldoBase + bonos - deducciones
 
-    public int getIdPeriodo() { return idPeriodo; }
-    public void setIdPeriodo(int idPeriodo) { this.idPeriodo = idPeriodo; }
+    // Control
+    private String estado;        // "Pendiente" | "Pagado" | "Cancelado"
+    private Date   createdAt;
 
-    public double getSalarioBase() { return salarioBase; }
-    public void setSalarioBase(double salarioBase) { this.salarioBase = salarioBase; }
+    public Nomina() {}
 
-    public double getDiasTrabajados() { return diasTrabajados; }
-    public void setDiasTrabajados(double diasTrabajados) { this.diasTrabajados = diasTrabajados; }
+    // ── Getters y Setters ──────────────────────────────────────────────
 
-    public double getDiasIncapacidad() { return diasIncapacidad; }
-    public void setDiasIncapacidad(double diasIncapacidad) { this.diasIncapacidad = diasIncapacidad; }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public double getDiasVacaciones() { return diasVacaciones; }
-    public void setDiasVacaciones(double diasVacaciones) { this.diasVacaciones = diasVacaciones; }
+    public String getIdEmpleado() { return idEmpleado; }
+    public void setIdEmpleado(String idEmpleado) { this.idEmpleado = idEmpleado; }
 
-    public double getTotalPercepciones() { return totalPercepciones; }
-    public void setTotalPercepciones(double totalPercepciones) { this.totalPercepciones = totalPercepciones; }
+    public String getNombreEmpleado() { return nombreEmpleado; }
+    public void setNombreEmpleado(String nombreEmpleado) { this.nombreEmpleado = nombreEmpleado; }
 
-    public double getTotalDeducciones() { return totalDeducciones; }
-    public void setTotalDeducciones(double totalDeducciones) { this.totalDeducciones = totalDeducciones; }
+    public String getNumeroEmpleado() { return numeroEmpleado; }
+    public void setNumeroEmpleado(String numeroEmpleado) { this.numeroEmpleado = numeroEmpleado; }
 
-    public double getIsrRetenido() { return isrRetenido; }
-    public void setIsrRetenido(double isrRetenido) { this.isrRetenido = isrRetenido; }
+    public String getFechaInicio() { return fechaInicio; }
+    public void setFechaInicio(String fechaInicio) { this.fechaInicio = fechaInicio; }
 
-    public double getImssEmpleado() { return imssEmpleado; }
-    public void setImssEmpleado(double imssEmpleado) { this.imssEmpleado = imssEmpleado; }
+    public String getFechaFin() { return fechaFin; }
+    public void setFechaFin(String fechaFin) { this.fechaFin = fechaFin; }
 
-    public double getInfonavit() { return infonavit; }
-    public void setInfonavit(double infonavit) { this.infonavit = infonavit; }
+    public int getEjercicio() { return ejercicio; }
+    public void setEjercicio(int ejercicio) { this.ejercicio = ejercicio; }
 
-    public double getNetoPagar() { return netoPagar; }
-    public void setNetoPagar(double netoPagar) { this.netoPagar = netoPagar; }
+    public double getSueldoBase() { return sueldoBase; }
+    public void setSueldoBase(double sueldoBase) { this.sueldoBase = sueldoBase; }
+
+    public double getBonos() { return bonos; }
+    public void setBonos(double bonos) { this.bonos = bonos; }
+
+    public double getDeducciones() { return deducciones; }
+    public void setDeducciones(double deducciones) { this.deducciones = deducciones; }
+
+    public double getTotalNeto() { return totalNeto; }
+    public void setTotalNeto(double totalNeto) { this.totalNeto = totalNeto; }
 
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
+
     @Override
     public String toString() {
-        return "Nomina{" + "idNomina=" + idNomina + ", empleado=" + idEmpleado + ", neto=" + netoPagar + '}';
+        return "Nomina{id=" + id + ", empleado=" + idEmpleado
+                + ", periodo=" + fechaInicio + "/" + fechaFin
+                + ", neto=" + totalNeto + ", estado=" + estado + "}";
     }
 }

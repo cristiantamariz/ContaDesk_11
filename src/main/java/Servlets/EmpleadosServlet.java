@@ -3,103 +3,76 @@ package Servlets;
 import Beans.Empleado;
 import Daos.EmpleadoDAO;
 import com.google.gson.Gson;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
+import jakarta.servlet.http.*;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-@WebServlet(name = "EmpleadosServlet", urlPatterns = {"/EmpleadosServlet"})
+// Mapeamos ambas rutas por compatibilidad
+@WebServlet(urlPatterns = {"/EmpleadoServlet", "/EmpleadosServlet"})
 public class EmpleadosServlet extends HttpServlet {
 
-    private EmpleadoDAO empleadoDAO;
-    private Gson gson;
+    private final EmpleadoDAO dao = new EmpleadoDAO();
+    private final Gson gson = new Gson();
 
     @Override
-    public void init() throws ServletException {
-        super.init();
-        empleadoDAO = new EmpleadoDAO();
-        gson = new Gson();
-    }
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        String action = req.getParameter("accion");
+        if (action == null) action = req.getParameter("action");
 
-        String action = request.getParameter("action");
-        PrintWriter out = response.getWriter();
-
-        if ("list".equals(action)) {
-            List<Empleado> lista = empleadoDAO.listarTodos();
-            out.print(gson.toJson(lista));
-        } else {
-            out.print("{\"error\": \"Acción no válida\"}");
+        if ("listar".equals(action) || "list".equals(action)) {
+            resp.getWriter().print(gson.toJson(dao.listarTodos()));
         }
-        out.flush();
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        req.setCharacterEncoding("UTF-8");
+        resp.setContentType("application/json;charset=UTF-8");
 
-        String action = request.getParameter("action");
-        PrintWriter out = response.getWriter();
-        String jsonRespuesta = "";
+        String action = req.getParameter("accion");
+        if (action == null) action = req.getParameter("action");
+
+        Map<String, Object> respuesta = new HashMap<>();
 
         try {
-            if ("create".equals(action) || "update".equals(action)) {
-                Empleado e = new Empleado();
+            // El caso de eliminar lee el ID desde la URL
+            if ("eliminar".equals(action) || "delete".equals(action)) {
+                String id = req.getParameter("id");
+                boolean ok = dao.eliminar(id);
+                respuesta.put("success", ok);
+                respuesta.put("message", ok ? "Empleado eliminado correctamente." : "No se pudo eliminar.");
+            }
+            // Para crear y actualizar, leemos el JSON del cuerpo de la petición
+            else {
+                BufferedReader reader = req.getReader();
+                Empleado e = gson.fromJson(reader, Empleado.class);
 
-                // Mapeo básico
-                String id = request.getParameter("id");
-                if (id != null && !id.isEmpty()) e.setId(id);
-
-                e.setNumeroEmpleado(request.getParameter("numeroEmpleado"));
-                e.setNombre(request.getParameter("nombre"));
-                e.setApellidoPaterno(request.getParameter("apellidoPaterno"));
-                e.setFechaContratacion(request.getParameter("fechaContratacion"));
-                e.setActivo(Boolean.parseBoolean(request.getParameter("activo")));
-
-                // Mapeo de objetos embebidos
-                e.getDepartamento().setNombre(request.getParameter("departamentoNombre"));
-                e.getPuesto().setNombre(request.getParameter("puestoNombre"));
-
-                String salarioStr = request.getParameter("salario");
-                if (salarioStr != null && !salarioStr.isEmpty()) {
-                    e.getPuesto().setSalarioMinimo(Double.parseDouble(salarioStr));
+                if ("crear".equals(action) || "create".equals(action)) {
+                    boolean ok = dao.crear(e);
+                    respuesta.put("success", ok);
+                    respuesta.put("message", ok ? "Empleado creado correctamente." : "No se pudo crear.");
                 }
-
-                boolean exito;
-                if ("create".equals(action)) {
-                    exito = empleadoDAO.crear(e);
-                    jsonRespuesta = exito ? "{\"ok\":true, \"mensaje\":\"Empleado registrado con éxito\"}"
-                            : "{\"ok\":false, \"mensaje\":\"Error al registrar empleado\"}";
-                } else {
-                    exito = empleadoDAO.actualizar(e);
-                    jsonRespuesta = exito ? "{\"ok\":true, \"mensaje\":\"Empleado actualizado\"}"
-                            : "{\"ok\":false, \"mensaje\":\"Error al actualizar empleado\"}";
+                else if ("actualizar".equals(action) || "update".equals(action)) {
+                    boolean ok = dao.actualizar(e);
+                    respuesta.put("success", ok);
+                    respuesta.put("message", ok ? "Empleado actualizado correctamente." : "No se pudo actualizar.");
                 }
-
-            } else if ("delete".equals(action)) {
-                String id = request.getParameter("id");
-                boolean exito = empleadoDAO.eliminar(id);
-                jsonRespuesta = exito ? "{\"ok\":true, \"mensaje\":\"Empleado eliminado\"}"
-                        : "{\"ok\":false, \"mensaje\":\"No se pudo eliminar el empleado\"}";
-            } else {
-                jsonRespuesta = "{\"ok\":false, \"mensaje\":\"Acción POST no reconocida\"}";
+                else {
+                    respuesta.put("success", false);
+                    respuesta.put("message", "Acción no reconocida.");
+                }
             }
         } catch (Exception ex) {
+            respuesta.put("success", false);
+            respuesta.put("message", "Error procesando la solicitud: " + ex.getMessage());
             ex.printStackTrace();
-            jsonRespuesta = "{\"ok\":false, \"mensaje\":\"Error en el servidor: " + ex.getMessage() + "\"}";
         }
 
-        out.print(jsonRespuesta);
-        out.flush();
+        resp.getWriter().print(gson.toJson(respuesta));
     }
 }

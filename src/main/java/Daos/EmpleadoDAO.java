@@ -2,8 +2,6 @@ package Daos;
 
 import Beans.Empleado;
 import Conexion.ConexionMongo;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
@@ -16,7 +14,7 @@ import java.util.List;
 
 public class EmpleadoDAO {
 
-    private MongoCollection<Document> coleccion;
+    private final MongoCollection<Document> coleccion;
 
     public EmpleadoDAO() {
         MongoDatabase db = ConexionMongo.getDatabase();
@@ -39,7 +37,6 @@ public class EmpleadoDAO {
     // ── 2. CREAR (INSERT) ─────────────────────────────────────────────────
     public boolean crear(Empleado e) {
         try {
-            // Forzar la estampa de tiempo de creación si viene vacía
             if (e.getCreatedAt() == null) {
                 e.setCreatedAt(new Date());
             }
@@ -96,6 +93,8 @@ public class EmpleadoDAO {
     // ── METODOS DE MAPEO (DOCUMENT <-> BEAN) ──────────────────────────────
 
     private Empleado documentToEmpleado(Document doc) {
+        if (doc == null) return null;
+
         Empleado e = new Empleado();
 
         e.setId(doc.getObjectId("_id").toHexString());
@@ -113,7 +112,6 @@ public class EmpleadoDAO {
         e.setEstadoCivil(doc.getString("estado_civil"));
         e.setTipoContrato(doc.getString("tipo_contrato"));
 
-        // Evita NullPointerException si el campo primitivo booleano no existe
         Boolean activoOpt = doc.getBoolean("activo");
         e.setActivo(activoOpt != null ? activoOpt : false);
 
@@ -133,16 +131,11 @@ public class EmpleadoDAO {
         if (puestoDoc != null) {
             e.getPuesto().setNombre(puestoDoc.getString("nombre"));
 
-            // 2. CORRECCIÓN PARA LOS SALARIOS (usando Number)
             Number min = (Number) puestoDoc.get("salario_minimo");
-            if (min != null) {
-                e.getPuesto().setSalarioMinimo(min.doubleValue());
-            }
+            if (min != null) e.getPuesto().setSalarioMinimo(min.doubleValue());
 
             Number max = (Number) puestoDoc.get("salario_maximo");
-            if (max != null) {
-                e.getPuesto().setSalarioMaximo(max.doubleValue());
-            }
+            if (max != null) e.getPuesto().setSalarioMaximo(max.doubleValue());
         }
 
         return e;
@@ -155,7 +148,6 @@ public class EmpleadoDAO {
             doc.append("_id", new ObjectId(e.getId()));
         }
 
-        // Método auxiliar para evitar el null en campos de texto
         doc.append("numero_empleado", e.getNumeroEmpleado() != null ? e.getNumeroEmpleado() : "");
         doc.append("nombre", e.getNombre() != null ? e.getNombre() : "");
         doc.append("apellido_paterno", e.getApellidoPaterno() != null ? e.getApellidoPaterno() : "");
@@ -173,27 +165,22 @@ public class EmpleadoDAO {
         doc.append("created_at", e.getCreatedAt() != null ? e.getCreatedAt() : new Date());
         doc.append("usuario_id", e.getUsuarioId() != null ? e.getUsuarioId() : 0);
 
-        // Subdocumento departamento
-        Document depto = new Document("nombre", "");
-        Document desc = new Document("descripcion", "");
+        // CORRECCIÓN DE DEPARTAMENTO: Directo al mapa del subdocumento depto
+        Document depto = new Document();
         if (e.getDepartamento() != null) {
-            depto.put("nombre", e.getDepartamento().getNombre() != null ? e.getDepartamento().getNombre() : "");
-            depto.put("descripcion", e.getDepartamento().getDescripcion() != null ? e.getDepartamento().getDescripcion() : "");
+            depto.append("nombre", e.getDepartamento().getNombre() != null ? e.getDepartamento().getNombre() : "");
+            depto.append("descripcion", e.getDepartamento().getDescripcion() != null ? e.getDepartamento().getDescripcion() : "");
         }
         doc.append("departamento", depto);
 
-        // Mapeo del objeto embebido: puesto
-        Document puestoDoc = (Document) doc.get("puesto");
-        if (puestoDoc != null) {
-            e.getPuesto().setNombre(puestoDoc.getString("nombre"));
-
-            // Extracción segura que funciona tanto para Integer como para Double
-            Number min = (Number) puestoDoc.get("salario_minimo");
-            Number max = (Number) puestoDoc.get("salario_maximo");
-
-            if (min != null) e.getPuesto().setSalarioMinimo(min.doubleValue());
-            if (max != null) e.getPuesto().setSalarioMaximo(max.doubleValue());
+        // CORRECCIÓN DE PUESTO: Escribir del Bean hacia Mongo (No al revés)
+        Document puesto = new Document();
+        if (e.getPuesto() != null) {
+            puesto.append("nombre", e.getPuesto().getNombre() != null ? e.getPuesto().getNombre() : "");
+            puesto.append("salario_minimo", e.getPuesto().getSalarioMinimo() != null ? e.getPuesto().getSalarioMinimo() : 0.0);
+            puesto.append("salario_maximo", e.getPuesto().getSalarioMaximo() != null ? e.getPuesto().getSalarioMaximo() : 0.0);
         }
+        doc.append("puesto", puesto);
 
         return doc;
     }

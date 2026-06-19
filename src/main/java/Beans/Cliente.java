@@ -1,10 +1,12 @@
 package Beans;
 
-import java.sql.Timestamp;
+import java.util.Date;
+import org.bson.types.ObjectId;
 
 public class Cliente {
 
-    private int idCliente;
+    // En Mongo el ID estándar es una cadena hexadecimal manejada por ObjectId
+    private String idCliente;
     private String nombre;
     private String razonSocial;
     private String rfc;
@@ -15,16 +17,17 @@ public class Cliente {
     private String regimenFiscal;
     private String usoCfdi;
     private boolean activo;
-    private Timestamp createdAt;
+    // Mongo guarda fechas como java.util.Date de forma nativa
+    private Date createdAt;
 
     // Constructor vacío
     public Cliente() {
     }
 
-    // Constructor completo (SELECT)
-    public Cliente(int idCliente, String nombre, String razonSocial, String rfc, String telefono,
+    // Constructor completo (Para cuando recuperas de MongoDB)
+    public Cliente(String idCliente, String nombre, String razonSocial, String rfc, String telefono,
                    String email, String direccion, String codigoPostal, String regimenFiscal,
-                   String usoCfdi, boolean activo, Timestamp createdAt) {
+                   String usoCfdi, boolean activo, Date createdAt) {
         this.idCliente = idCliente;
         this.nombre = nombre;
         this.razonSocial = razonSocial;
@@ -39,7 +42,7 @@ public class Cliente {
         this.createdAt = createdAt;
     }
 
-    // Constructor para INSERT (sin ID ni fecha)
+    // Constructor para INSERT (sin ID ni fecha, Mongo los genera automáticamente)
     public Cliente(String nombre, String razonSocial, String rfc, String telefono,
                    String email, String direccion, String codigoPostal, String regimenFiscal,
                    String usoCfdi, boolean activo) {
@@ -55,9 +58,9 @@ public class Cliente {
         this.activo = activo;
     }
 
-    // Getters y Setters
-    public int getIdCliente() { return idCliente; }
-    public void setIdCliente(int idCliente) { this.idCliente = idCliente; }
+    // Getters y Setters actualizados
+    public String getIdCliente() { return idCliente; }
+    public void setIdCliente(String idCliente) { this.idCliente = idCliente; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
@@ -89,11 +92,11 @@ public class Cliente {
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public Date getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
 
     @Override
     public String toString() {
-        return "Cliente{" + "id=" + idCliente + ", nombre='" + nombre + "', rfc='" + rfc + "'}";
+        return "Cliente{" + "id='" + idCliente + "', nombre='" + nombre + "', rfc='" + rfc + "'}";
     }
 }

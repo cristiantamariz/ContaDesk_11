@@ -1,4 +1,5 @@
-<%@ page contentType="text/html; charset=UTF-8" isELIgnored="true" %>
+<%@ page contentType="text/html; charset=UTF-8" isELIgnored="false" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <div id="section-empleados" style="display:none">
     <div class="panel">
@@ -19,16 +20,19 @@
                         <th>Nombre</th>
                         <th>Departamento</th>
                         <th>Puesto</th>
+                        <th>Salario</th>
                         <th>Estado</th>
                         <th style="text-align:right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="empleados-tbody">
+                    <%-- Los datos se inyectarán dinámicamente vía AJAX desde app.js --%>
                 </tbody>
             </table>
         </div>
     </div>
 
+    <%-- Modal de Empleado --%>
     <div id="modal-empleado" class="modal-overlay" style="display:none">
         <div class="modal-box modal-lg" id="modal-empleado-box">
             <div class="modal-header">
@@ -45,9 +49,11 @@
                         <label>No. Empleado <span class="required">*</span></label>
                         <input type="text" id="emp-numero" class="form-input">
                     </div>
-                    <div class="form-group">
-                        <label>Fecha Contratación <span class="required">*</span></label>
-                        <input type="date" id="emp-fecha" class="form-input">
+                    <div class="form-grid-2" style="grid-template-columns: 1fr; gap: 0;">
+                        <div class="form-group">
+                            <label>Fecha Contratación <span class="required">*</span></label>
+                            <input type="date" id="emp-fecha" class="form-input">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label>Nombre <span class="required">*</span></label>
@@ -71,10 +77,12 @@
                     </div>
                     <div class="form-group">
                         <label>Estado</label>
-                        <select id="emp-activo" class="form-input">
-                            <option value="true">Activo</option>
-                            <option value="false">Baja</option>
-                        </select>
+                        <div class="select-wrapper">
+                            <select id="emp-activo" class="form-input">
+                                <option value="true">Activo</option>
+                                <option value="false">Baja</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div id="emp-error" class="form-error" style="display:none; margin-top:15px;"></div>
