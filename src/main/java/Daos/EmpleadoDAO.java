@@ -40,10 +40,13 @@ public class EmpleadoDAO {
             if (e.getCreatedAt() == null) {
                 e.setCreatedAt(new Date());
             }
+            // Generar número de empleado automáticamente si el frontend no lo envía
+            if (e.getNumeroEmpleado() == null || e.getNumeroEmpleado().trim().isEmpty()) {
+                e.setNumeroEmpleado(generarNumeroEmpleado());
+            }
             Document doc = empleadoToDocument(e);
             coleccion.insertOne(doc);
 
-            // Recuperar el ID generado por Mongo y asignarlo al Bean
             ObjectId idGenerado = doc.getObjectId("_id");
             if (idGenerado != null) {
                 e.setId(idGenerado.toHexString());
@@ -63,11 +66,8 @@ public class EmpleadoDAO {
                 System.err.println("No se puede actualizar un empleado sin un ID de MongoDB válido.");
                 return false;
             }
-
             ObjectId objectId = new ObjectId(e.getId());
             Document doc = empleadoToDocument(e);
-
-            // Reemplaza el documento completo que coincida con el _id
             var resultado = coleccion.replaceOne(Filters.eq("_id", objectId), doc);
             return resultado.getModifiedCount() > 0;
         } catch (Exception ex) {
@@ -81,7 +81,6 @@ public class EmpleadoDAO {
         try {
             if (id == null || id.isEmpty()) return false;
             ObjectId objectId = new ObjectId(id);
-
             var resultado = coleccion.deleteOne(Filters.eq("_id", objectId));
             return resultado.getDeletedCount() > 0;
         } catch (Exception e) {
@@ -90,13 +89,30 @@ public class EmpleadoDAO {
         }
     }
 
-    // ── METODOS DE MAPEO (DOCUMENT <-> BEAN) ──────────────────────────────
+    // ── 5. GENERAR NÚMERO DE EMPLEADO AUTOMÁTICO ─────────────────────────
+    private String generarNumeroEmpleado() {
+        int maxNumero = 0;
+        try {
+            for (Document doc : coleccion.find()) {
+                String num = doc.getString("numero_empleado");
+                if (num != null && num.startsWith("EMP-")) {
+                    try {
+                        int valor = Integer.parseInt(num.substring(4));
+                        if (valor > maxNumero) maxNumero = valor;
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error generando número de empleado: " + e.getMessage());
+        }
+        return String.format("EMP-%03d", maxNumero + 1);
+    }
 
+    // ── MAPEO DOCUMENT → BEAN ─────────────────────────────────────────────
     private Empleado documentToEmpleado(Document doc) {
         if (doc == null) return null;
 
         Empleado e = new Empleado();
-
         e.setId(doc.getObjectId("_id").toHexString());
         e.setNumeroEmpleado(doc.getString("numero_empleado"));
         e.setNombre(doc.getString("nombre"));
@@ -106,34 +122,31 @@ public class EmpleadoDAO {
         e.setFechaNacimiento(doc.getString("fecha_nacimiento"));
         e.setFechaBaja(doc.getString("fecha_baja"));
         e.setTelefono(doc.getString("telefono"));
-        e.setCurp(doc.getString("curp"));
-        e.setRfc(doc.getString("rfc"));
-        e.setNss(doc.getString("nss"));
         e.setEstadoCivil(doc.getString("estado_civil"));
         e.setTipoContrato(doc.getString("tipo_contrato"));
 
         Boolean activoOpt = doc.getBoolean("activo");
         e.setActivo(activoOpt != null ? activoOpt : false);
-
         e.setCreatedAt(doc.getDate("created_at"));
-        Number uId = (Number) doc.get("usuario_id");
-        e.setUsuarioId(uId != null ? uId.intValue() : 0);
 
-        // Mapeo del objeto embebido: departamento
+        Object uIdRaw = doc.get("usuario_id");
+        if (uIdRaw instanceof Number) {
+            e.setUsuarioId(((Number) uIdRaw).intValue());
+        } else {
+            e.setUsuarioId(0);
+        }
+
         Document deptDoc = (Document) doc.get("departamento");
         if (deptDoc != null) {
             e.getDepartamento().setNombre(deptDoc.getString("nombre"));
             e.getDepartamento().setDescripcion(deptDoc.getString("descripcion"));
         }
 
-        // Mapeo del objeto embebido: puesto
         Document puestoDoc = (Document) doc.get("puesto");
         if (puestoDoc != null) {
             e.getPuesto().setNombre(puestoDoc.getString("nombre"));
-
             Number min = (Number) puestoDoc.get("salario_minimo");
             if (min != null) e.getPuesto().setSalarioMinimo(min.doubleValue());
-
             Number max = (Number) puestoDoc.get("salario_maximo");
             if (max != null) e.getPuesto().setSalarioMaximo(max.doubleValue());
         }
@@ -141,6 +154,7 @@ public class EmpleadoDAO {
         return e;
     }
 
+    // ── MAPEO BEAN → DOCUMENT ─────────────────────────────────────────────
     private Document empleadoToDocument(Empleado e) {
         Document doc = new Document();
 
@@ -148,35 +162,34 @@ public class EmpleadoDAO {
             doc.append("_id", new ObjectId(e.getId()));
         }
 
-        doc.append("numero_empleado", e.getNumeroEmpleado() != null ? e.getNumeroEmpleado() : "");
-        doc.append("nombre", e.getNombre() != null ? e.getNombre() : "");
-        doc.append("apellido_paterno", e.getApellidoPaterno() != null ? e.getApellidoPaterno() : "");
-        doc.append("apellido_materno", e.getApellidoMaterno() != null ? e.getApellidoMaterno() : "");
+        // numero_empleado siempre viene con valor (generado en crear(), preservado en actualizar())
+        doc.append("numero_empleado",    e.getNumeroEmpleado()    != null ? e.getNumeroEmpleado()    : "");
+        doc.append("nombre",             e.getNombre()            != null ? e.getNombre()            : "");
+        doc.append("apellido_paterno",   e.getApellidoPaterno()   != null ? e.getApellidoPaterno()   : "");
+        doc.append("apellido_materno",   e.getApellidoMaterno()   != null ? e.getApellidoMaterno()   : "");
         doc.append("fecha_contratacion", e.getFechaContratacion() != null ? e.getFechaContratacion() : "");
-        doc.append("fecha_nacimiento", e.getFechaNacimiento() != null ? e.getFechaNacimiento() : "");
-        doc.append("fecha_baja", e.getFechaBaja() != null ? e.getFechaBaja() : "");
-        doc.append("telefono", e.getTelefono() != null ? e.getTelefono() : "");
-        doc.append("curp", e.getCurp() != null ? e.getCurp() : "");
-        doc.append("rfc", e.getRfc() != null ? e.getRfc() : "");
-        doc.append("nss", e.getNss() != null ? e.getNss() : "");
-        doc.append("estado_civil", e.getEstadoCivil() != null ? e.getEstadoCivil() : "");
-        doc.append("tipo_contrato", e.getTipoContrato() != null ? e.getTipoContrato() : "");
-        doc.append("activo", e.isActivo());
-        doc.append("created_at", e.getCreatedAt() != null ? e.getCreatedAt() : new Date());
-        doc.append("usuario_id", e.getUsuarioId() != null ? e.getUsuarioId() : 0);
+        doc.append("fecha_nacimiento",   e.getFechaNacimiento()   != null ? e.getFechaNacimiento()   : "");
+        doc.append("fecha_baja",         e.getFechaBaja()         != null ? e.getFechaBaja()         : "");
+        doc.append("telefono",           e.getTelefono()          != null ? e.getTelefono()          : "");
+        doc.append("estado_civil",       e.getEstadoCivil()       != null ? e.getEstadoCivil()       : "");
+        doc.append("tipo_contrato",      e.getTipoContrato()      != null ? e.getTipoContrato()      : "");
+        doc.append("activo",             e.isActivo());
+        doc.append("created_at",         e.getCreatedAt()         != null ? e.getCreatedAt()         : new Date());
 
-        // CORRECCIÓN DE DEPARTAMENTO: Directo al mapa del subdocumento depto
+        // Forzar int32 — el schema exige bsonType: ['int', 'null']
+        Integer uId = e.getUsuarioId();
+        doc.append("usuario_id", uId != null ? uId.intValue() : 0);
+
         Document depto = new Document();
         if (e.getDepartamento() != null) {
-            depto.append("nombre", e.getDepartamento().getNombre() != null ? e.getDepartamento().getNombre() : "");
+            depto.append("nombre",      e.getDepartamento().getNombre()      != null ? e.getDepartamento().getNombre()      : "");
             depto.append("descripcion", e.getDepartamento().getDescripcion() != null ? e.getDepartamento().getDescripcion() : "");
         }
         doc.append("departamento", depto);
 
-        // CORRECCIÓN DE PUESTO: Escribir del Bean hacia Mongo (No al revés)
         Document puesto = new Document();
         if (e.getPuesto() != null) {
-            puesto.append("nombre", e.getPuesto().getNombre() != null ? e.getPuesto().getNombre() : "");
+            puesto.append("nombre",         e.getPuesto().getNombre()        != null ? e.getPuesto().getNombre()        : "");
             puesto.append("salario_minimo", e.getPuesto().getSalarioMinimo() != null ? e.getPuesto().getSalarioMinimo() : 0.0);
             puesto.append("salario_maximo", e.getPuesto().getSalarioMaximo() != null ? e.getPuesto().getSalarioMaximo() : 0.0);
         }
